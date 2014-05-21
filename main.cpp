@@ -1,58 +1,28 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <utility>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 #include <boost/lexical_cast.hpp>
+#include "xml_to_parse.cpp"
 
 using namespace std;
 using namespace boost::property_tree;
 
-namespace {
-
-// fragment from boost documentation. For test pupposses only
-const string XML_TEXT = R"~(
-<?xml version='1.0'?>
-<!DOCTYPE rootElement>
-<html>
-    <head>
-        <title>Chapter&#160;22.&#160;Boost.PropertyTree - 1.55.0</title>
-    </head>
-    <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
-        <div id="boost-common-heading-doc">
-            <div class="heading-inner">
-                <div class="heading-placard"></div>
-
-                <h1 class="heading-title">
-                    <a href="/">
-                        <img src="/gfx/space.png" alt= "Boost C++ Libraries" class="heading-logo"></img>
-                        <span class="heading-boost">Boost</span>
-                        <span class="heading-cpplibraries">C++ Libraries</span>
-                    </a>
-                </h1>
-
-                <p class="heading-quote">
-                    <q>...one of the most highly regarded and expertly designed C++ library projects in the world.</q>
-                    <span class="heading-attribution">&mdash;
-                        <a href="http://www.gotw.ca/" class="external">Herb Sutter</a> and
-                        <a href="http://en.wikipedia.org/wiki/Andrei_Alexandrescu" class="external">Andrei Alexandrescu</a>,
-                        <a href="http://safari.awprofessional.com/?XmlId=0321113586" class="external">C++ Coding Standards</a>
-                    </span>
-                </p>
-            </div>
-        </div>
-    </body>
-</html>
-)~";
-
-}
+boost::property_tree::ptree create_tree();
 
 int main() {
-    stringstream stream;
-    stream << XML_TEXT;
-
     try {
+        // 1) serialize data
+        create_tree();
+
+        // 2) parse xml data
+        stringstream stream;
+        stream << XML_TEXT;
+
         ptree pt;
         read_xml(stream, pt);
 
@@ -90,3 +60,52 @@ int main() {
     return 0;
 }
 
+boost::property_tree::ptree create_tree() {
+    ptree pt;
+
+    // add simple values
+    pt.put("name", "Ivan");
+    pt.put("last_name", "Ivanov");
+    pt.put("age", 33);
+
+    // add sub trees
+    {
+        ptree card;
+        card.put("number", "0000 1111 2222 3333");
+        card.put("expires", "01/11");
+        card.put("cvc2_cvv2_cid", 111);
+
+        pt.put_child("card", card);
+    }
+
+    // add collection data
+    {
+        ptree childs_array;
+
+        vector<string> names = { "Misha", "Masha" };
+
+        int i = 5;
+        for (auto& name : names) {
+            ptree child_tree;
+            child_tree.put("name", name);
+            child_tree.put("age", i++);
+
+            // if you want to get json array as a result, you should use
+            // an empty string as a key. But in this case xml output wouldn't look nice
+            childs_array.push_back(std::make_pair("", child_tree));
+        }
+        pt.add_child("children", childs_array);
+    }
+
+
+    cout << "write json ----------------------------------------" << endl;
+    json_parser::write_json(cout, pt, true);
+
+    cout << "write xml -----------------------------------------" << endl;
+    // note the key of chiled obj
+    xml_writer_settings<char> settings('\t', 1);
+    xml_parser::write_xml(cout, pt, settings);
+    cout << "---------------------------------------------------" << endl;
+
+    return pt;
+}
