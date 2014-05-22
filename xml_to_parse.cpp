@@ -3,7 +3,7 @@
 using namespace std;
 
 // fragment from boost documentation. For test pupposses only
-const string XML_TEXT = R"~(
+string XML_TEXT = R"~(
 <?xml version='1.0'?>
 <!DOCTYPE rootElement>
 <html>

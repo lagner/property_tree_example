@@ -7,10 +7,11 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 #include <boost/lexical_cast.hpp>
-#include "xml_to_parse.cpp"
 
 using namespace std;
 using namespace boost::property_tree;
+
+extern std::string XML_TEXT;
 
 boost::property_tree::ptree create_tree();
 
