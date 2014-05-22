@@ -11,7 +11,7 @@
 using namespace std;
 using namespace boost::property_tree;
 
-extern std::string XML_TEXT;
+extern const std::string XML_TEXT;
 
 boost::property_tree::ptree create_tree();
 boost::property_tree::ptree parse_tree(istream& xml_stream);
