@@ -14,6 +14,8 @@ using namespace boost::property_tree;
 extern std::string XML_TEXT;
 
 boost::property_tree::ptree create_tree();
+boost::property_tree::ptree parse_tree(istream& xml_stream);
+
 
 int main() {
     try {
@@ -21,35 +23,9 @@ int main() {
         create_tree();
 
         // 2) parse xml data
-        stringstream stream;
+        std::stringstream stream;
         stream << XML_TEXT;
-
-        ptree pt;
-        read_xml(stream, pt);
-
-        // get string value. If value wasn't found ptree_bad_path exception will be thrown
-        string title = pt.get<std::string>("html.head.title");
-        cout << "title: " << title << endl;
-
-        // iterate through all "body" arrtibutes.
-        // get_child returns child ptree or ptree_bad_path ex will be thrown
-        ptree child_tree = pt.get_child("html.body.<xmlattr>");
-        cout << "<body> attrbutes: " << endl;
-        for (ptree::value_type& node: child_tree) {
-            string attr_name = node.first;
-            string attr_value = node.second.data();
-            cout << "\t" << attr_name << " \t- " << attr_value << endl;
-        }
-        cout << endl;
-
-        // try to get q tag
-        boost::optional<ptree&> q_node = pt.get_child_optional("html.body.div.div.p.q");
-        if (q_node) {
-            cout << "q tag was found: " << q_node.get().data() << endl;
-        } else {
-            cout << "q tag wasn't found" << endl;
-        }
-        cout << endl;
+        parse_tree(stream);
 
     } catch (const std::exception& ex) {
         cout << "Error: " << ex.what() << endl;
@@ -57,8 +33,36 @@ int main() {
         cout << "FATAL!!!" << endl;
         return 1;
     }
-
     return 0;
+}
+
+boost::property_tree::ptree parse_tree(istream& xml_stream) {
+    ptree pt;
+    read_xml(xml_stream, pt);
+
+    // get string value. If value wasn't found ptree_bad_path exception will be thrown
+    string title = pt.get<std::string>("html.head.title");
+    cout << "title: " << title << endl;
+
+    // iterate through all "body" arrtibutes.
+    // get_child returns child ptree or ptree_bad_path ex will be thrown
+    ptree child_tree = pt.get_child("html.body.<xmlattr>");
+    cout << "<body> attrbutes: " << endl;
+    for (ptree::value_type& node: child_tree) {
+        string attr_name = node.first;
+        string attr_value = node.second.data();
+        cout << "\t" << attr_name << " \t- " << attr_value << endl;
+    }
+    cout << endl;
+
+    // try to get q tag
+    boost::optional<ptree&> q_node = pt.get_child_optional("html.body.div.div.p.q");
+    if (q_node) {
+        cout << "q tag was found: " << q_node.get().data() << endl;
+    } else {
+        cout << "q tag wasn't found" << endl;
+    }
+    return pt;
 }
 
 boost::property_tree::ptree create_tree() {
